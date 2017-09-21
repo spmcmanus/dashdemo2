@@ -1,18 +1,6 @@
+// primary js libraries
 import * as React from 'react';
 import * as jquery from 'jquery';
-
-import { IDashdemoProps } from './IDashdemoProps';
-import { escape } from '@microsoft/sp-lodash-subset';
-import {
-  SearchBox
-} from 'office-ui-fabric-react/lib/SearchBox';
-
-//import './SearchBox.Small.Example.scss';
-
-import Iframe from 'react-iframe';
-
-// styling
-import styles from '../resources/Dashdemo.module.scss';
 
 // Office-Ui Fabric Components
 import {
@@ -24,21 +12,18 @@ import {
   IDocumentCardPreviewProps,
   DocumentCardType
 } from 'office-ui-fabric-react/lib/DocumentCard';
-
+import Iframe from 'react-iframe';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
+import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 
+// Custom components
 import LinkListMarkup from './linkListMarkup';
+import { IDashdemoProps } from './IDashdemoProps';
+// styling
+import styles from '../resources/Dashdemo.module.scss';
 
 export interface linksState {
   links: [
-    {
-      "Title": string;
-      "AuthorId": string;
-      "linkURL": string;
-      "linkDesc": string;
-    }
-  ];
-  allLinks: [
     {
       "Title": string;
       "AuthorId": string;
@@ -56,18 +41,8 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
 
   public constructor(props: IDashdemoProps, state: linksState) {
     super(props);
-
-    console.log('document card dtype', DocumentCardType.compact)
-
     this.state = {
       links:
-      [{
-        "Title": '',
-        "AuthorId": '',
-        "linkURL": '',
-        "linkDesc": '',
-      }],
-      allLinks:
       [{
         "Title": '',
         "AuthorId": '',
@@ -82,84 +57,65 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
     this.onCardClick = this.onCardClick.bind(this);
   }
 
+  // seach functions
   public searchOnChange(searchValue) {
     if (searchValue == '') {
       this.componentDidMount();
     }
   }
   public search(searchValue) {
-    
     var filteredLinks = this.state.links;
-
     for (var x=0;x<filteredLinks.length;x++) {
       var temp = 0;
-      console.log(filteredLinks[x]["documentAuthor"])
       if (filteredLinks[x]["Title"].toLowerCase().indexOf(searchValue.toLowerCase()) >= 0) {
         temp = 1;
       } else if (filteredLinks[x]["documentAuthor"].toLowerCase().indexOf(searchValue.toLowerCase()) >= 0) {
         temp = 1;
       }
-
       if (temp == 0) {
         filteredLinks[x] = null;
       }
-
     }
     this.setState({
       links: filteredLinks,
-      allLinks: this.state.allLinks,
       linkSelectedURL: '',
       rowClasses: this.state.rowClasses,
       embedClasses: this.state.embedClasses,
       cardType: DocumentCardType.normal
     });
-
   }
 
   // card click listener
   public onCardClick(link, e) {
-    console.log("clicky")
-    console.log("thisLink", link)
     if (link.AttachmentFiles.results[0] == undefined) {
-      console.log("display link instead");
       var win = window.open(link.linkURL, '_blank');
       win.focus();
-
     } else {
-      console.log("work off attachment")
       const linkId = link.ID;
       const fileName = link.AttachmentFiles.results[0].FileName;
       const fileExt = fileName.substr(fileName.lastIndexOf('.') + 1);
       if (fileExt == 'docx' || fileExt == 'doc' || fileExt == 'xlsx' || fileExt == 'pptx') {
-        console.log("office doc...embed")
         const attachmentURLRoot = window.location.origin + "/sites/dev/_layouts/15/WopiFrame.aspx?sourcedoc=";
         const attachmentURL = attachmentURLRoot + "/sites/dev/Lists/DashboardLinks/Attachments/" + linkId + "/" + fileName;
         const extras = "&action=embedview&wdbipreview=true";
         const attachmentFullURL = attachmentURL;
-        console.log("attachmentFullURL", attachmentFullURL);
         this.setState({
           links: this.state.links,
-          allLinks: this.state.allLinks,
           linkSelectedURL: attachmentFullURL,
           rowClasses: 'ms-Grid-col ms-sm4',
           embedClasses: "",
           cardType: DocumentCardType.compact
         });
       } else {
-        console.log("non office document ... download");
-        var win = window.open(link.AttachmentFiles.results[0].ServerRelativeUrl, '_blank');
-        win.focus();
+        window.open(link.AttachmentFiles.results[0].ServerRelativeUrl, '_blank','rel="noopener"').focus(); 
       }
     }
-    console.log("click is done")
   }
 
   public toggleCardDisplay() {
-    console.log('toggling card type')
     if (this.state.cardType == DocumentCardType.normal) {
       this.setState({
         links: this.state.links,
-        allLinks: this.state.allLinks,
         linkSelectedURL: this.state.linkSelectedURL,
         rowClasses: this.state.rowClasses,
         embedClasses: this.state.embedClasses,
@@ -168,7 +124,6 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
     } else {
       this.setState({
         links: this.state.links,
-        allLinks: this.state.allLinks,
         linkSelectedURL: this.state.linkSelectedURL,
         rowClasses: this.state.rowClasses,
         embedClasses: this.state.embedClasses,
@@ -177,55 +132,9 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
     }
   }
 
-  public trim_array(test_array) {
-    var index = -1,
-      arr_length = test_array ? test_array.length : 0,
-      resIndex = -1,
-      result = [];
-
-    while (++index < arr_length) {
-      var value = test_array[index];
-
-      if (value) {
-        result[++resIndex] = value;
-      }
-    }
-    return result;
-  }
-
-/*
-  public filter(ev: React.FormEvent<HTMLElement>, isChecked: boolean) {
-    console.log(ev);
-    console.log('filter state', this.state);
-    console.log(`The option has been changed to ${isChecked}.`);
-
-    var filteredLinks = this.state.links;
-    filteredLinks.map((link, key) => {
-      if (link["AttachmentFiles"].results.length > 0) {
-        var fileExt = link["AttachmentFiles"].results[0].FileName.split(".")[1].trim();
-        if (fileExt != 'docx' && fileExt != 'doc') {
-          filteredLinks[key] = null;
-        }
-      } else {
-        filteredLinks[key] = null;
-      }
-    });
-
-
-    this.setState({
-      links: filteredLinks,
-      allLinks: this.state.allLinks,
-      linkSelectedURL: '',
-      rowClasses: this.state.rowClasses,
-      embedClasses: this.state.embedClasses,
-      cardType: DocumentCardType.normal
-    });
-  }
-*/
   public clearSelected() {
     this.setState({
       links: this.state.links,
-      allLinks: this.state.allLinks,
       linkSelectedURL: '',
       rowClasses: this.state.rowClasses,
       embedClasses: this.state.embedClasses,
@@ -237,21 +146,16 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
     var reactHandler = this;
     const rootUrl = window.location.origin;
     const listName = "DashboardLinks";
-    const siteName = "dev"
-    // const fullUrl = rootUrl + "/sites/" + siteName + "/_api/web/lists/GetByTitle('" + listName + "')/Items"//(1)/AttachmentFiles";
+    const siteName = "dev";
     const fullUrl = rootUrl + "/sites/" + siteName + "/_api/web/lists/GetByTitle('" + listName + "')/Items?$expand=AttachmentFiles";
-
-
     jquery.ajax({
       url: fullUrl,
       type: "GET",
       dataType: "json",
       headers: { 'Accept': 'application/json; odata=verbose;' },
       success: (resultData) => {
-        console.log(resultData)
         reactHandler.setState({
           links: resultData.d.results,
-          allLinks: resultData.d.results,
           linkSelectedURL: '',
           rowClasses: 'ms-Grid-col ms-sm12',
           embedClasses: '',
@@ -267,9 +171,7 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
   }
 
   public render(): React.ReactElement<IDashdemoProps> {
-    console.log("state", this.state)
-    var showLinks = this.state.links.filter(function(n){ return n != null })
-    console.log("show links",showLinks)
+    var showLinks = this.state.links.filter((n) => {return n != null; });
     if (showLinks[0].Title == '') {
       return (
         <div>Loading...</div>
@@ -317,7 +219,6 @@ export default class Dashdemo extends React.Component<IDashdemoProps, linksState
     } else {
       const theseIncidents = this.state.links;
       return (
-
         <div className="ms-Grid">
           <div className="ms-Grid-row">
             <div className="ms-Grid-col ms-sm4">
