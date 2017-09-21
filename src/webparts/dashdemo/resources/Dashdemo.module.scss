@@ -21,8 +21,18 @@
     display:  table ;
     margin-left :  50px ;
 }
-
-
+.iconContainer {
+  margin-left:5px;
+  margin-top: 5px;
+  display:inline-block;
+}
+.inline {
+  display: inline-block;
+}
+.smallTitle {
+  margin-left: 5px;
+  font-size: smaller;
+}
 .hideMe {
   display:none;
 }
@@ -31,7 +41,9 @@
   float:right !important;
   margin-bottom: 10px;
 }
-
+.ms-SearchBoxSmallExample {
+  width: 300px;
+}
 .dashdemo {
 
 
